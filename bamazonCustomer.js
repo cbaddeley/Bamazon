@@ -173,7 +173,9 @@ function quantity() {
       //prompts the user to check whether they want to purchase or not
     ]).then(function(answer) {
       numPurchasing = answer.itemQuantity;
-      var totalToAddToSales = parseFloat((answer.itemQuantity * priceOfCurrentItem));
+      var totalToAddToSales = parseFloat((answer.itemQuantity * priceOfCurrentItem).toFixed(2));
+      console.log(typeof totalToAddToSales);
+      console.log(totalToAddToSales)
       console.log("");
       console.log(chalk.bold("Your total is: ") + chalk.blue(totalToAddToSales));
       console.log("");
@@ -200,7 +202,7 @@ function quantity() {
                 }
               ],
               function(error) {
-                if (error) throw err;
+                if (error) throw error;
                 console.log(chalk.green("Items successfully purchased."));
                 inquirer
                   .prompt({

@@ -126,6 +126,7 @@ function addInv(results) {
         })
         .then(function(answer) {
             var newNumberOfStock = parseInt(results[idOfStock].stock_quantity) + parseInt(answer.numOfStock);
+            var temp = idOfStock+1;
             connection.query(
               "UPDATE products SET ? WHERE ?",
               [
@@ -133,7 +134,7 @@ function addInv(results) {
                   stock_quantity: newNumberOfStock
                 },
                 {
-                  id: idOfStock
+                  id: temp
                 }
               ],
               function(error) {

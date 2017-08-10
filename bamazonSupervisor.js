@@ -158,7 +158,7 @@ function displayTable(department) {
     tableInput.push(resp[0].department_name);
     tableInput.push(resp[0].over_head_costs.toFixed(2).toString());
     tableInput.push(salesAdded.toFixed(2).toString());
-    tableInput.push((salesAdded.toFixed(2)-resp[0].over_head_costs.toFixed(2)).toString());
+    tableInput.push((salesAdded.toFixed(2)-resp[0].over_head_costs.toFixed(2)).toFixed(2).toString());
     data.push(tableInput);
     output = table(data, config);
     console.log(output);
