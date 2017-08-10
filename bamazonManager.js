@@ -3,6 +3,9 @@ const inquirer = require("inquirer");
 const chalk = require("chalk");
 const {table} = require('table');
 var uniqueIdsForPrompt = [];
+var idOfStock;
+var departmentArray = [];
+var uniqueArray = [];
 
 var connection = mysql.createConnection({
   host: "localhost",
@@ -75,14 +78,125 @@ function viewProducts(results) {
 }
 
 function addInv(results) {
-  console.log("add inv function");
-  prompt();
+  inquirer
+    .prompt([
+      {
+        name: "idOfStock",
+        type: "input",
+        message: "Please type in the ID# of the product whose stock you would to replenish.",
+        validate: function(value) {
+          if (value == 'cancel') {
+            connection.destroy();
+            process.exit(0);
+          }
+          var validId = false;
+          for (var i = 0; i < results.length; i ++) {
+            if (value == results[i].id) {
+              validId = true;
+            }
+          }
+          if (isNaN(value) === false && validId === true) {
+            return true;
+          }
+          console.log("\nWe're sorry that is not a valid ID#. Please choose a valid ID# or type 'cancel' to leave this application.");
+          return false;
+        }
+      }
+    ]).then(function(answer) {
+      idOfStock = parseInt(answer.idOfStock) - 1;
+      console.log("");
+      console.log(chalk.bold("You have chosen: ") + chalk.blue(results[idOfStock].product_name));
+      console.log("");
+      inquirer
+        .prompt({
+          name: "numOfStock",
+          type: "input",
+          message: "Please type the amount you would like to add.",
+          validate: function(value) {
+            if (value == 'cancel') {
+              connection.destroy();
+              process.exit(0);
+            }
+            if (isNaN(value) === false && value > 0) {
+              return true;
+            }
+            console.log("\nPlease choose a valid amount or type 'cancel' to leave this application.");
+            return false;
+          }
+        })
+        .then(function(answer) {
+            var newNumberOfStock = parseInt(results[idOfStock].stock_quantity) + parseInt(answer.numOfStock);
+            connection.query(
+              "UPDATE products SET ? WHERE ?",
+              [
+                {
+                  stock_quantity: newNumberOfStock
+                },
+                {
+                  id: idOfStock
+                }
+              ],
+              function(error) {
+                if (error) throw err;
+                console.log(chalk.green("Items successfully added."));
+                console.log(chalk.green("New stock count of " + results[idOfStock].product_name + " is " + newNumberOfStock + "."));
+                prompt();
+            });
+        });
+    });
 }
 
-function addNew() {
-  console.log("add new function");
-  prompt();
+function addNew(results) {
+
+
+  inquirer.prompt([
+
+    {
+      name: "name",
+      type: "input",
+      message: "Type in the name of the new product.",
+    },
+
+    {
+      type: "list",
+      name: "department",
+      message: "Type in the department",
+      choices: uniqueArray
+      },
+
+    {
+      type: "name",
+      name: "price",
+      message: "Type in cost of item"
+    },
+    {
+      type: "name",
+      name: "stock",
+      message: "Initial Stock."
+    }
+  ]).then(function(resp) {
+    connection.query(
+      "INSERT INTO products (product_name, department_name, price, stock_quantity) VALUES ('" + resp.name + "','" + resp.department + "'," + resp.price+ "," + resp.stock+")",
+      function(error) {
+        if (error) throw error;
+        console.log(chalk.green("Item successfully added."));
+        prompt();
+      });
+  });
 }
+        // name: "name",
+        // type: "input",
+        // message: "Type in the name of the new product.",
+        // validate: function(value) {
+        //   if (value == 'cancel') {
+        //     connection.destroy();
+        //     process.exit(0);
+        //   }
+        //   var confirm = false;
+        //   for (var i = 0; i < results.length; i ++) {
+        //     if (value == results[i].product_name) {
+
+
 
 function prompt() {
     inquirer
@@ -121,7 +235,14 @@ function prompt() {
             break;
 
           case "Add New Product":
-            addNew();
+          connection.query("SELECT * FROM departments", function(err, res) {
+            if (err) throw err;
+            getDepartArr(res);
+            connection.query("SELECT * FROM products", function(err, res) {
+              if (err) throw err;
+              addNew(res);
+              });
+            });
             break;
 
           case "Exit":
@@ -138,3 +259,13 @@ connection.connect(function(err) {
   // run the start function after the connection is made to prompt the user
   prompt();
 });
+
+function getDepartArr (results) {
+  for (var i = 0; i < results.length; i++) {
+    departmentArray.push(results[i].department_name);
+  }
+  //This is a function that gets rid of duplicates
+  uniqueArray = departmentArray.filter(function(elem, pos) {
+    return departmentArray.indexOf(elem) == pos;
+  });
+}

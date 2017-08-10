@@ -8,6 +8,7 @@ var nameOfCurrentItem;
 var priceOfCurrentItem;
 var idOfCurrentItem;
 var numPurchasing;
+var currentTotalSales;
 
 // create the connection information for the sql database
 var connection = mysql.createConnection({
@@ -133,6 +134,7 @@ function start(){
               nameOfCurrentItem = res[0].product_name;
               priceOfCurrentItem = res[0].price;
               idOfCurrentItem = res[0].id;
+              currentTotalSales = res[0].product_sales;
               quantity();
             });
           });
@@ -171,8 +173,9 @@ function quantity() {
       //prompts the user to check whether they want to purchase or not
     ]).then(function(answer) {
       numPurchasing = answer.itemQuantity;
+      var totalToAddToSales = parseFloat((answer.itemQuantity * priceOfCurrentItem));
       console.log("");
-      console.log(chalk.bold("Your total is: ") + chalk.blue((answer.itemQuantity * priceOfCurrentItem).toFixed(2)));
+      console.log(chalk.bold("Your total is: ") + chalk.blue(totalToAddToSales));
       console.log("");
       inquirer
         .prompt({
@@ -189,7 +192,8 @@ function quantity() {
               "UPDATE products SET ? WHERE ?",
               [
                 {
-                  stock_quantity: newQuantity
+                  stock_quantity: newQuantity,
+                  product_sales: (currentTotalSales + totalToAddToSales)
                 },
                 {
                   id: idOfCurrentItem
